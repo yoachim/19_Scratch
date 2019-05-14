@@ -69,4 +69,4 @@ for filtername in filters:
         plt.savefig(outDir+'/%i.png' % i)
         plt.close()
 
-    subprocess.call("ffmpeg -framerate 4 -pix_fmt yuv420p  -i movie_plots_%s/%%d.png %s_band.mp4" % (filtername, filtername), shell=True)
+    subprocess.call("ffmpeg -i movie_plots_%s/%%d.png  -f mp4 -framerate 10 -pix_fmt yuv420p  %s_band.mp4" % (filtername, filtername), shell=True)
