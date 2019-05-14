@@ -36,32 +36,31 @@ for filtername in filters:
         {0: bundle}, opsdb, outDir=outDir, resultsDb=resultsDb)
     group.runAll()
 
-    n_val = 3
+    for n_val in [3, 5]:
+        # Ugh, can't figure out how to do this properly with slicing
+        time_to_val = np.zeros(bundle.metricValues[:, 0].size)
+        first_obs = np.zeros(time_to_val.size)
+        for i in np.arange(time_to_val.size):
+            good = np.where(bundle.metricValues[i, :] > 0)[0]
+            if np.size(good) > 0:
+                first_obs[i] = bins[np.min(good)]
+            else:
+                first_obs[i] = hp.UNSEEN
+            good = np.where(bundle.metricValues[i, :] > n_val)[0]
+            if good.size > 0:
 
-    # Ugh, can't figure out how to do this properly with slicing
-    time_to_val = np.zeros(bundle.metricValues[:, 0].size)
-    first_obs = np.zeros(time_to_val.size)
-    for i in np.arange(time_to_val.size):
-        good = np.where(bundle.metricValues[i, :] > 0)[0]
-        if np.size(good) > 0:
-            first_obs[i] = bins[np.min(good)]
-        else:
-            first_obs[i] = hp.UNSEEN
-        good = np.where(bundle.metricValues[i, :] > n_val)[0]
-        if good.size > 0:
+                time_to_val[i] = bins[good.min()]
+            else:
+                time_to_val[i] = hp.UNSEEN
 
-            time_to_val[i] = bins[good.min()]
-        else:
-            time_to_val[i] = hp.UNSEEN
+        hp.mollview(time_to_val, title='Time to %i obs, %s' % (n_val, filtername), unit='Days', max=365)
+        plt.savefig('ttv_%i_%s.pdf' % (n_val, filtername))
+        diff = time_to_val-first_obs
 
-    hp.mollview(time_to_val, title='Time to %i obs' % n_val, unit='Days', max=365)
-    plt.savefig('ttv_%s.pdf' % filtername)
-    diff = time_to_val-first_obs
-
-    mask = np.where((time_to_val == hp.UNSEEN) | (first_obs == hp.UNSEEN))
-    diff[mask] = hp.UNSEEN
-    hp.mollview(diff, title='Time to %i obs after first obs' % n_val, max=200)
-    plt.savefig('ttn_afterfirst_%s.pdf' % filtername)
+        mask = np.where((time_to_val == hp.UNSEEN) | (first_obs == hp.UNSEEN))
+        diff[mask] = hp.UNSEEN
+        hp.mollview(diff, title='Time to %i obs after first obs, %s' % (n_val, filtername), max=200)
+        plt.savefig('ttn_afterfirst_%i_%s.pdf' % (n_val, filtername))
 
     outDir = 'movie_plots_%s' % filtername
     for i in np.arange(bundle.metricValues[0, :].size):
