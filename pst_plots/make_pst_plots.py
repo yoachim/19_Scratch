@@ -7,7 +7,20 @@ import lsst.sims.maf.db as db
 import lsst.sims.maf.plots as plots
 import healpy as hp
 import subprocess
+from matplotlib import ticker
 
+
+def better_cb(unit, nbins=10):
+    ax = plt.gca()
+    im = ax.get_images()[0]
+    cb = plt.colorbar(im, shrink=0.75, aspect=25, pad=0.1, orientation='horizontal',
+                      format=None, extendrect=True)
+    cb.set_label(unit, fontsize=None)
+    tick_locator = ticker.MaxNLocator(nbins=nbins)
+    cb.locator = tick_locator
+    cb.update_ticks()
+    cb.solids.set_edgecolor("face")
+    return cb
 
 nside = 128
 # Connect to an opsim database, bleeding-edge sims here:
@@ -53,18 +66,23 @@ for filtername in filters:
             else:
                 time_to_val[i] = hp.UNSEEN
 
-        hp.mollview(time_to_val, title='Time to %i obs, %s' % (n_val, filtername), unit='Days', max=365)
+        hp.mollview(time_to_val, title='Time to %i obs, %s' % (n_val, filtername), max=365, cbar=False)
+        better_cb('Days')
+
         plt.savefig('ttv_%i_%s.pdf' % (n_val, filtername))
         diff = time_to_val-first_obs
 
         mask = np.where((time_to_val == hp.UNSEEN) | (first_obs == hp.UNSEEN))
         diff[mask] = hp.UNSEEN
-        hp.mollview(diff, title='Time to %i obs after first obs, %s' % (n_val, filtername), max=200)
+        hp.mollview(diff, title='Time to %i obs after first obs, %s' % (n_val, filtername), max=90, cbar=False)
+        better_cb('Days')
+
         plt.savefig('ttn_afterfirst_%i_%s.pdf' % (n_val, filtername))
 
     outDir = 'movie_plots_%s' % filtername
     for i in np.arange(bundle.metricValues[0, :].size):
-        hp.mollview(bundle.metricValues[:, i], max=80, unit='N obs', title='%s, Night %i' % (filtername, bins[i]))
+        hp.mollview(bundle.metricValues[:, i], max=10, unit='N obs', title='%s, Night %i' % (filtername, bins[i]), cbar=False)
+        better_cb('N obs')
         plt.savefig(outDir+'/%i.png' % i)
         plt.close()
 
