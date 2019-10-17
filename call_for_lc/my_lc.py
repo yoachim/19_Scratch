@@ -11,7 +11,7 @@ def my_lc(mjd, peak_mag, peak_mjd, shape1, filters='r'):
     peak_mjd : float
         The peak mjd of the LC
     shape1 : float
-        Some shape parameter
+        Some shape parameter. Add more shape parameters as needed.
     filter : str ('r')
         If the lightcurve is different in different filters, pass in as an array of str
     """
